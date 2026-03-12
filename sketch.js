@@ -12,33 +12,38 @@ let fragmentos = [];
 
 let esMobile = false;
 
+let ultimoTap = 0;
+let presionando = false;
+let tiempoPresion = 0;
+
 function preload(){
 
 imgs[0] = loadImage("imagen_0.png");
 imgs[1] = loadImage("imagen_1.png");
 imgs[2] = loadImage("imagen_2.png");
+imgs[3] = loadImage("imagen_3.png"); // instrucciones mobile
 
 }
 
 function setup(){
 
-createCanvas(windowWidth,windowHeight);
+createCanvas(windowWidth, windowHeight);
 imageMode(CENTER);
 
 esMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
 
-crearFragmentos();
-
 if(esMobile){
-crearBotones();
+imgActual = 3;
+}else{
+imgActual = 0;
 }
+
+crearFragmentos();
 
 }
 
 function windowResized(){
-
 resizeCanvas(windowWidth,windowHeight);
-
 }
 
 function draw(){
@@ -77,8 +82,17 @@ image(temp,0,0);
 pop();
 
 if(glitchActivo) glitch();
+
 if(fragmentacionActiva) actualizarFragmentos();
+
 if(pixelSortingActivo) pixelSort();
+
+if(presionando){
+if(millis()-tiempoPresion>600){
+invertido=!invertido;
+presionando=false;
+}
+}
 
 }
 
@@ -134,7 +148,7 @@ function crearFragmentos(){
 
 fragmentos=[];
 
-for(let i=0;i<80;i++){
+for(let i=0;i<90;i++){
 
 fragmentos.push({
 
@@ -215,50 +229,43 @@ updatePixels();
 
 }
 
-function crearBotones(){
+function touchStarted(){
 
-let controles=[
+let ahora = millis();
 
-["0",()=>imgActual=0],
-["1",()=>imgActual=1],
-["2",()=>imgActual=2],
-
-["C",()=>colorShift=(colorShift+40)%200],
-["I",()=>invertido=!invertido],
-
-["G",()=>glitchActivo=!glitchActivo],
-["F",()=>fragmentacionActiva=!fragmentacionActiva],
-["P",()=>pixelSortingActivo=!pixelSortingActivo],
-
-["R",()=>resetEfectos()],
-["S",()=>saveCanvas("captura","png")]
-
-];
-
-let x=10;
-let y=10;
-
-for(let c of controles){
-
-let btn=createButton(c[0]);
-
-btn.position(x,y);
-btn.size(44,44);
-
-btn.style("background","#000");
-btn.style("color","#fff");
-btn.style("border","1px solid white");
-btn.style("font-size","16px");
-
-btn.mousePressed(c[1]);
-
-y+=50;
-
-if(y>250){
-y=10;
-x+=50;
+if(ahora-ultimoTap<300){
+glitchActivo=!glitchActivo;
 }
 
+ultimoTap = ahora;
+
+presionando=true;
+tiempoPresion=millis();
+
+if(imgActual==3){
+imgActual=0;
 }
+
+return false;
+
+}
+
+function touchMoved(){
+
+fragmentacionActiva=true;
+
+return false;
+
+}
+
+function touchEnded(){
+
+presionando=false;
+
+if(touches.length==2){
+pixelSortingActivo=!pixelSortingActivo;
+}
+
+return false;
 
 }
